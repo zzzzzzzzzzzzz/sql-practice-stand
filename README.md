@@ -46,6 +46,42 @@ jobs:
       - run: docker compose up -d
 ```
 
+## Deployment via GitHub Actions
+
+Automated deployment to a remote host is handled by `.github/workflows/deploy.yml`. The workflow syncs the repository to your server over SSH, writes a `.env` file from your secrets (aligning with the variables in `docker-compose.yml`), and runs `docker compose pull` followed by `docker compose up -d --remove-orphans`.
+
+Requirements for the target host:
+- SSH access with a private key stored as a secret.
+- Docker Engine with the Compose plugin installed.
+- DNS for `BASE_DOMAIN` (and `adminer.<BASE_DOMAIN>`) pointing at the host if you want Traefik/ACME to succeed.
+
+Triggers:
+- Pushes to `main`.
+- Manual runs via **Run workflow**.
+
+Required GitHub secrets:
+
+| Secret | Purpose |
+| --- | --- |
+| `DEPLOY_HOST` | SSH host or IP for the deployment target |
+| `DEPLOY_USER` | SSH user |
+| `DEPLOY_PATH` | Remote directory to sync the project into |
+| `DEPLOY_SSH_KEY` | Private key with access to the host |
+| `BASE_DOMAIN` | Base domain for Traefik host rules |
+| `TRAEFIK_ACME_EMAIL` | ACME/Let’s Encrypt email |
+| `TRAEFIK_BASIC_AUTH_USERS` | Basic auth users for Adminer |
+| `POSTGRES_USER` | Database user |
+| `POSTGRES_PASSWORD` | Database password |
+
+Optional secrets (these have defaults in the workflow if omitted):
+
+| Secret | Default | Purpose |
+| --- | --- | --- |
+| `DEPLOY_SSH_PORT` | `22` | SSH port |
+| `POSTGRES_DB` | `practice_db` | Database name |
+| `POSTGRES_PORT` | `5432` | Host port for PostgreSQL |
+| `ADMINER_PORT` | `8080` | Host port for Adminer |
+
 ### Notes on Traefik and Adminer authentication
 
 - Traefik listens on ports 80/443 and routes `adminer.<BASE_DOMAIN>` to Adminer. Update DNS to point `adminer.<BASE_DOMAIN>` at your host before enabling TLS/Let’s Encrypt.
