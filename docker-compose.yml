@@ -5,6 +5,7 @@ services:
     command:
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
+      - --api.dashboard=true
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
@@ -16,6 +17,18 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik_letsencrypt:/letsencrypt
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik-dashboard-http.rule=Host(`traefik.${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}`)"
+      - "traefik.http.routers.traefik-dashboard-http.entrypoints=web"
+      - "traefik.http.routers.traefik-dashboard-http.middlewares=traefik-redirect-to-https"
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}`)"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.traefik-dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      - "traefik.http.routers.traefik-dashboard.middlewares=traefik-dashboard-auth"
+      - "traefik.http.middlewares.traefik-redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.traefik-dashboard-auth.basicauth.users=${TRAEFIK_BASIC_AUTH_USERS:-admin:$$apr1$$x2k87nhN$$MIU0oc3VeZfdT/oFbgsno1}"
 
   postgres:
     image: postgres:16
