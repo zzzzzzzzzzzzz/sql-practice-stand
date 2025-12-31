@@ -50,6 +50,8 @@ jobs:
 
 Automated deployment to a remote host is handled by `.github/workflows/deploy.yml`. The workflow syncs the repository to your server over SSH, writes a `.env` file from your secrets (aligning with the variables in `docker-compose.yml`), and runs `docker compose pull` followed by `docker compose up -d --remove-orphans`.
 
+The deploy job is bound to the `main` GitHub environment, so configure these secrets in the **Environment secrets** for `main` (or in org-level environment secrets). This also lets you enforce any environment protections (approvals, branch rules, etc.) you’ve configured on `main`.
+
 Requirements for the target host:
 - SSH access with a private key stored as a secret.
 - Docker Engine with the Compose plugin installed.
