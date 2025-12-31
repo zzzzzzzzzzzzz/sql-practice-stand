@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   deploy:
-    environment: main
+    environment: personal
     runs-on: ubuntu-latest
     env:
       DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
