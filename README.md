@@ -97,5 +97,6 @@ This stack is lightweight (PostgreSQL + Adminer + Traefik) and will comfortably 
 - **Disk:** Start with 20–40 GB of fast SSD-backed storage. Leave room for WAL growth and backups; consider separate volumes for the database data directory and backups if available.
 - **Network:** A stable connection with low latency is more important than high bandwidth; typical cloud egress/ingress is ample for SQL and Adminer usage.
 - **Platform:** A small cloud VM (e.g., 2 vCPU / 4–8 GB RAM) running Docker Engine with the Compose plugin is adequate. Avoid oversubscribing the host if you co-locate other containers.
+- **Operating system:** A stable Linux LTS distro with good Docker support (e.g., Ubuntu LTS, Debian stable, or Rocky/AlmaLinux) is preferred. Use a minimal install, keep the kernel updated, and avoid mixing distro package Docker with upstream Docker Engine packages.
 
 Monitor container CPU, memory, and disk usage initially; if sustained utilization regularly exceeds ~70%, scale the VM up one size (more vCPU/RAM) or move PostgreSQL to a managed service.
