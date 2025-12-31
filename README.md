@@ -82,6 +82,22 @@ Optional secrets (these have defaults in the workflow if omitted):
 | `POSTGRES_PORT` | `5432` | Host port for PostgreSQL |
 | `ADMINER_PORT` | `8080` | Host port for Adminer |
 
+### Acquiring `DEPLOY_SSH_KEY`
+
+Use a dedicated SSH key for GitHub Actions deployments (avoid reusing a personal key):
+
+1. Generate a new key on your workstation without a passphrase:
+   ```bash
+   ssh-keygen -t ed25519 -f deploy_key -C "sql-practice-stand deploy"
+   ```
+2. Copy the public key to your server (adjust port/user/host as needed):
+   ```bash
+   ssh-copy-id -i deploy_key.pub -p 22 your-user@your-host
+   ```
+   Alternatively, append the contents of `deploy_key.pub` to `~/.ssh/authorized_keys` on the server.
+3. Add the private key contents to the `DEPLOY_SSH_KEY` secret in your GitHub repository settings. Paste the full contents of `deploy_key` (including the `BEGIN/END OPENSSH PRIVATE KEY` lines).
+4. Delete the private key from your local filesystem if you do not need it elsewhere, or store it securely in a password manager; the public key can remain on the server.
+
 ### Notes on Traefik and Adminer authentication
 
 - Traefik listens on ports 80/443 and routes `adminer.<BASE_DOMAIN>` to Adminer. Update DNS to point `adminer.<BASE_DOMAIN>` at your host before enabling TLS/Let’s Encrypt.
