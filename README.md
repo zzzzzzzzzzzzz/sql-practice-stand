@@ -87,3 +87,15 @@ Optional secrets (these have defaults in the workflow if omitted):
 - Traefik listens on ports 80/443 and routes `adminer.<BASE_DOMAIN>` to Adminer. Update DNS to point `adminer.<BASE_DOMAIN>` at your host before enabling TLS/Let’s Encrypt.
 - Replace the default `TRAEFIK_BASIC_AUTH_USERS` value (which is a hashed `admin:admin` pair) with a secure hash. You can generate one with `htpasswd -nb <user> <password>` and place it in `.env` or a secret.
 - If you prefer to avoid exposing Adminer publicly, omit the Traefik labels in `docker-compose.yml` and rely on `ADMINER_PORT` for local-only access (e.g., by binding the port to `127.0.0.1:8080:8080`).
+
+### Sizing guidance for a small, containerized deployment
+
+This stack is lightweight (PostgreSQL + Adminer + Traefik) and will comfortably serve a single developer or a small team (up to ~10 concurrent users) on modest hardware:
+
+- **CPU:** 2 vCPUs is sufficient; 4 vCPUs provides headroom for maintenance tasks (backups, vacuuming) without noticeable contention.
+- **Memory:** 4 GB RAM works for a lightly used database; 8 GB improves caching and responsiveness under bursty workloads.
+- **Disk:** Start with 20–40 GB of fast SSD-backed storage. Leave room for WAL growth and backups; consider separate volumes for the database data directory and backups if available.
+- **Network:** A stable connection with low latency is more important than high bandwidth; typical cloud egress/ingress is ample for SQL and Adminer usage.
+- **Platform:** A small cloud VM (e.g., 2 vCPU / 4–8 GB RAM) running Docker Engine with the Compose plugin is adequate. Avoid oversubscribing the host if you co-locate other containers.
+
+Monitor container CPU, memory, and disk usage initially; if sustained utilization regularly exceeds ~70%, scale the VM up one size (more vCPU/RAM) or move PostgreSQL to a managed service.
