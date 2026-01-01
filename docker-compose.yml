@@ -1,6 +1,6 @@
 services:
   traefik:
-    image: traefik:v3.1
+    image: traefik:v3.6.6
     restart: unless-stopped
     command:
       - --entrypoints.web.address=:80
@@ -12,8 +12,6 @@ services:
       - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
       - --certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_ACME_EMAIL:-you@example.com}
       - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
-    environment:
-      DOCKER_API_VERSION: "${TRAEFIK_DOCKER_API_VERSION:-1.52}"
     ports:
       - "80:80"
       - "443:443"

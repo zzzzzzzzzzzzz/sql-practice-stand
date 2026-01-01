@@ -22,7 +22,6 @@ Environment variables (with sensible defaults) can be supplied via a `.env` file
 | `POSTGRES_PORT` | `5432` | Host port for PostgreSQL |
 | `ADMINER_DEFAULT_SERVER` | `postgres` | Adminer default server |
 | `ADMINER_PORT` | `8080` | Host port for Adminer (direct access) |
-| `TRAEFIK_DOCKER_API_VERSION` | `1.52` | Docker API version Traefik should use when talking to the host |
 | `BASE_DOMAIN` | `sql.practice.zzzzzzzzzzzzz.cc` | Base domain used for Traefik host rules |
 | `TRAEFIK_ACME_EMAIL` | `you@example.com` | Email used for ACME/Let’s Encrypt |
 | `TRAEFIK_BASIC_AUTH_USERS` | `admin:<hashed password>` | Basic auth users for Adminer (Traefik middleware) |
