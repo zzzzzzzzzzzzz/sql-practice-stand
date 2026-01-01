@@ -8,9 +8,12 @@ services:
       - --api.dashboard=true
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=traefik-public
       - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
       - --certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_ACME_EMAIL:-you@example.com}
       - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+    environment:
+      DOCKER_API_VERSION: "${DOCKER_API_VERSION:-1.52}"
     ports:
       - "80:80"
       - "443:443"
@@ -30,6 +33,9 @@ services:
       - "traefik.http.routers.traefik-dashboard.middlewares=traefik-dashboard-auth"
       - "traefik.http.middlewares.traefik-redirect-to-https.redirectscheme.scheme=https"
       - "traefik.http.middlewares.traefik-dashboard-auth.basicauth.users=${TRAEFIK_BASIC_AUTH_USERS:-admin:$$apr1$$x2k87nhN$$MIU0oc3VeZfdT/oFbgsno1}"
+      - "traefik.docker.network=traefik-public"
+    networks:
+      - traefik-public
 
   postgres:
     image: postgres:16
@@ -48,6 +54,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - traefik-public
 
   adminer:
     image: adminer:4
@@ -73,7 +81,13 @@ services:
       - "traefik.http.routers.adminer.middlewares=adminer-auth"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "traefik.http.middlewares.adminer-auth.basicauth.users=${TRAEFIK_BASIC_AUTH_USERS:-admin:$$apr1$$x2k87nhN$$MIU0oc3VeZfdT/oFbgsno1}"
+      - "traefik.docker.network=traefik-public"
+    networks:
+      - traefik-public
 
 volumes:
   postgres_data:
   traefik_letsencrypt:
+
+networks:
+  traefik-public:
