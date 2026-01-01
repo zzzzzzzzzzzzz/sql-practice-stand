@@ -13,7 +13,7 @@ services:
       - --certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_ACME_EMAIL:-you@example.com}
       - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
     environment:
-      DOCKER_API_VERSION: "${DOCKER_API_VERSION:-1.52}"
+      DOCKER_API_VERSION: "${TRAEFIK_DOCKER_API_VERSION:-1.52}"
     ports:
       - "80:80"
       - "443:443"
