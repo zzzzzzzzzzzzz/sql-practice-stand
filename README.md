@@ -6,7 +6,7 @@ See [docs/schema.md](docs/schema.md) for the entity-relationship diagram and not
 
 ## Local tooling
 
-A `docker-compose.yml` is available to bring up a PostgreSQL instance alongside Adminer and a Traefik reverse proxy (for future domain and TLS support):
+A `docker-compose.yml` is available to bring up a PostgreSQL instance alongside Adminer and a Traefik reverse proxy (for future domain and TLS support). The shared network is explicitly named `traefik-public` so Traefik’s Docker provider and per-service labels resolve to the same network when the project name is auto-prefixed by Compose:
 
 ```bash
 docker compose up -d
