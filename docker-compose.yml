@@ -7,6 +7,7 @@ services:
       - --entrypoints.websecure.address=:443
       - --api.dashboard=true
       - --providers.docker=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
       - --providers.docker.exposedbydefault=false
       - --providers.docker.network=traefik-public
       - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
