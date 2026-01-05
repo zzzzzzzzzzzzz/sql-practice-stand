@@ -33,7 +33,7 @@ Environment variables (with sensible defaults) can be supplied via a `.env` file
 | `ADMINER_PORT` | `8080` | Host port for Adminer (direct access) |
 | `BASE_DOMAIN` | `sql.practice.zzzzzzzzzzzzz.cc` | Base domain used for Traefik host rules |
 | `TRAEFIK_ACME_EMAIL` | `you@example.com` | Email used for ACME/Let’s Encrypt |
-| `TRAEFIK_BASIC_AUTH_USERS` | `admin:<hashed password>` | Basic auth users for Adminer (Traefik middleware) |
+| `TRAEFIK_BASIC_AUTH_USERS` | `admin:<hashed password>` | Basic auth users for Traefik dashboard and Adminer middleware |
 
 For GitHub Actions, you can pass the same variables in a workflow using `env:` plus encrypted secrets:
 
@@ -113,6 +113,16 @@ Use a dedicated SSH key for GitHub Actions deployments (avoid reusing a personal
 
 - Traefik listens on ports 80/443 and routes `adminer.<BASE_DOMAIN>` to Adminer. Update DNS to point `adminer.<BASE_DOMAIN>` at your host before enabling TLS/Let’s Encrypt.
 - Replace the default `TRAEFIK_BASIC_AUTH_USERS` value (which is a hashed `admin:admin` pair) with a secure hash. You can generate one with `htpasswd -nb <user> <password>` and place it in `.env` or a secret.
+  - **Escaping `$` in `.env`:** If you set `TRAEFIK_BASIC_AUTH_USERS` in a `.env` file, escape dollar signs so Docker Compose does not treat them as variable substitutions. Example:
+    ```env
+    TRAEFIK_BASIC_AUTH_USERS=admin:$$apr1$$7HdKi9XQ$$5I3/itzLilHGsn2cNsYDE1
+    ```
+    When exporting in a shell, you can also wrap the value in single quotes to avoid extra escaping:
+    ```bash
+    export TRAEFIK_BASIC_AUTH_USERS='admin:$apr1$7HdKi9XQ$5I3/itzLilHGsn2cNsYDE1'
+    ```
+  - After changing the value, restart with `docker compose up -d` so Traefik reloads the middleware configuration.
+  - The provided GitHub Actions deploy workflow automatically escapes dollar signs when writing `.env` on the target host, so you can store the plain htpasswd output (e.g., `admin:$apr1$...`) in the `TRAEFIK_BASIC_AUTH_USERS` secret.
 - If you prefer to avoid exposing Adminer publicly, omit the Traefik labels in `docker-compose.yml` and rely on `ADMINER_PORT` for local-only access (e.g., by binding the port to `127.0.0.1:8080:8080`).
 
 ### Sizing guidance for a small, containerized deployment
