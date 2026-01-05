@@ -6,12 +6,18 @@ See [docs/schema.md](docs/schema.md) for the entity-relationship diagram and not
 
 ## Local tooling
 
-A `docker-compose.yml` is available to bring up a PostgreSQL instance alongside Adminer and a Traefik reverse proxy (for future domain and TLS support):
+A `docker-compose.yml` is available to bring up a PostgreSQL instance alongside Adminer and a Traefik reverse proxy (for future domain and TLS support). The shared network is explicitly named `traefik-public` so Traefik’s Docker provider and per-service labels resolve to the same network when the project name is auto-prefixed by Compose:
 
 ```bash
 docker compose up -d
 ```
 
+**Traefik HTTPS/ACME:** Ensure TCP/80 and TCP/443 are reachable from the internet for `BASE_DOMAIN` (and `adminer.<BASE_DOMAIN>`). Traefik’s HTTP challenge (`letsencrypt` resolver) is enabled in `docker-compose.yml`; certificate issuance will fail—and browsers will show an invalid/self-signed cert—if DNS is not pointing at the host or if port 80 is blocked.
+
+**Traefik basic auth tip:** Traefik expects `TRAEFIK_BASIC_AUTH_USERS` in `username:hash` format (the hash from `htpasswd -nb <user> <password>`). If you see log errors like `error parsing BasicUser: $apr1$...`, add the username prefix and keep the value quoted in `.env` so `$` is not mangled, e.g.:
+```bash
+TRAEFIK_BASIC_AUTH_USERS="admin:$$apr1$$x2k87nhN$$MIU0oc3VeZfdT/oFbgsno1"
+```
 Environment variables (with sensible defaults) can be supplied via a `.env` file or directly in the shell/CI environment. Update the defaults before exposing services to the internet.
 
 | Variable | Default | Purpose |

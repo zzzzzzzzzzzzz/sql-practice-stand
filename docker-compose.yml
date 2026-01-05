@@ -7,6 +7,7 @@ services:
       - --entrypoints.websecure.address=:443
       - --api.dashboard=true
       - --providers.docker=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
       - --providers.docker.exposedbydefault=false
       - --providers.docker.network=traefik-public
       - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
@@ -74,9 +75,17 @@ services:
       - "traefik.http.routers.adminer-http.middlewares=redirect-to-https"
       - "traefik.http.routers.adminer-http.service=adminer"
       - "traefik.http.routers.adminer.rule=Host(`adminer.${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}`)"
+      - "traefik.http.routers.adminer-base-http.rule=Host(`${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}`)"
+      - "traefik.http.routers.adminer-base-http.entrypoints=web"
+      - "traefik.http.routers.adminer-base-http.middlewares=redirect-to-https"
+      - "traefik.http.routers.adminer-base-http.service=adminer"
+      - "traefik.http.routers.adminer-base.rule=Host(`${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}`)"
       - "traefik.http.routers.adminer.entrypoints=websecure"
       - "traefik.http.routers.adminer.tls.certresolver=letsencrypt"
       - "traefik.http.routers.adminer.middlewares=adminer-auth"
+      - "traefik.http.routers.adminer-base.entrypoints=websecure"
+      - "traefik.http.routers.adminer-base.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.adminer-base.middlewares=adminer-auth"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "traefik.http.middlewares.adminer-auth.basicauth.users=${TRAEFIK_BASIC_AUTH_USERS:-admin:$$apr1$$x2k87nhN$$MIU0oc3VeZfdT/oFbgsno1}"
       - "traefik.docker.network=traefik-public"
@@ -89,3 +98,4 @@ volumes:
 
 networks:
   traefik-public:
+    name: traefik-public
