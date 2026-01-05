@@ -12,6 +12,13 @@ A `docker-compose.yml` is available to bring up a PostgreSQL instance alongside 
 docker compose up -d
 ```
 
+
+**Traefik HTTPS/ACME:** Ensure TCP/80 and TCP/443 are reachable from the internet for `BASE_DOMAIN` (and `adminer.<BASE_DOMAIN>`). Traefik’s HTTP challenge (`letsencrypt` resolver) is enabled in `docker-compose.yml`; certificate issuance will fail—and browsers will show an invalid/self-signed cert—if DNS is not pointing at the host or if port 80 is blocked.
+
+**Traefik basic auth tip:** Traefik expects `TRAEFIK_BASIC_AUTH_USERS` in `username:hash` format (the hash from `htpasswd -nb <user> <password>`). If you see log errors like `error parsing BasicUser: $apr1$...`, add the username prefix and keep the value quoted in `.env` so `$` is not mangled, e.g.:
+```bash
+TRAEFIK_BASIC_AUTH_USERS="admin:$$apr1$$x2k87nhN$$MIU0oc3VeZfdT/oFbgsno1"
+```
 **Traefik HTTPS/ACME:** Ensure TCP/80 and TCP/443 are reachable from the internet for `BASE_DOMAIN` (and `adminer.<BASE_DOMAIN>`). Traefik’s HTTP challenge (`letsencrypt` resolver) is enabled in `docker-compose.yml`; certificate issuance will fail—and browsers will show an invalid/self-signed cert—if DNS is not pointing at the host or if port 80 is blocked. To reuse a pre-created shared network, set `external: true` under the `traefik-public` network and create it in advance with `docker network create traefik-public`.
 
 Environment variables (with sensible defaults) can be supplied via a `.env` file or directly in the shell/CI environment. Update the defaults before exposing services to the internet.
