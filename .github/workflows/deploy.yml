@@ -85,10 +85,6 @@ jobs:
           set -euo pipefail
           cd "$DEPLOY_PATH"
 
-          # Escape dollar signs for Docker Compose variable expansion when writing the .env file.
-          # Example: admin:$apr1$abc$def becomes admin:$$apr1$$abc$$def in the written .env.
-          escaped_traefik_basic_auth_users=\${TRAEFIK_BASIC_AUTH_USERS//\$/\$\$}
-
           cat > .env <<'ENV'
           POSTGRES_USER=${POSTGRES_USER:-practice_user}
           POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-practice_password}
@@ -97,7 +93,7 @@ jobs:
           ADMINER_PORT=${ADMINER_PORT:-8080}
           BASE_DOMAIN=${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}
           TRAEFIK_ACME_EMAIL=${TRAEFIK_ACME_EMAIL}
-          TRAEFIK_BASIC_AUTH_USERS=${escaped_traefik_basic_auth_users}
+          TRAEFIK_BASIC_AUTH_USERS=${TRAEFIK_BASIC_AUTH_USERS}
           ENV
 
           docker compose pull
