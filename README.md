@@ -21,13 +21,14 @@ TRAEFIK_BASIC_AUTH_USERS="admin:$$apr1$$x2k87nhN$$MIU0oc3VeZfdT/oFbgsno1"
 ```
 **Traefik HTTPS/ACME:** Ensure TCP/80 and TCP/443 are reachable from the internet for `BASE_DOMAIN` (and `adminer.<BASE_DOMAIN>`). Traefik’s HTTP challenge (`letsencrypt` resolver) is enabled in `docker-compose.yml`; certificate issuance will fail—and browsers will show an invalid/self-signed cert—if DNS is not pointing at the host or if port 80 is blocked. To reuse a pre-created shared network, set `external: true` under the `traefik-public` network and create it in advance with `docker network create traefik-public`.
 
-Environment variables (with sensible defaults) can be supplied via a `.env` file or directly in the shell/CI environment. Update the defaults before exposing services to the internet.
+Environment variables (with sensible defaults) can be supplied via a `.env` file or directly in the shell/CI environment. Update the defaults before exposing services to the internet. PostgreSQL binds to `0.0.0.0` by default so remote SQL clients can connect; tighten with `POSTGRES_BIND_ADDRESS=127.0.0.1` plus SSH tunneling if you prefer. Adminer’s direct host port stays loopback-only while Traefik publishes it over HTTPS with basic auth.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `POSTGRES_USER` | `practice_user` | Database user |
 | `POSTGRES_PASSWORD` | `practice_password` | Database password |
 | `POSTGRES_DB` | `practice_db` | Database name |
+| `POSTGRES_BIND_ADDRESS` | `0.0.0.0` | Host bind address for PostgreSQL (set to `127.0.0.1` to restrict to loopback) |
 | `POSTGRES_PORT` | `5432` | Host port for PostgreSQL |
 | `ADMINER_DEFAULT_SERVER` | `postgres` | Adminer default server |
 | `ADMINER_PORT` | `8080` | Host port for Adminer (direct access) |

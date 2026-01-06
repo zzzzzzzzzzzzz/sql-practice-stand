@@ -36,6 +36,24 @@ services:
     networks:
       - traefik-public
 
+  landing:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    volumes:
+      - ./docs/landing:/usr/share/nginx/html:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.landing.loadbalancer.server.port=80"
+      - "traefik.http.routers.landing-http.rule=Host(`${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}`)"
+      - "traefik.http.routers.landing-http.entrypoints=web"
+      - "traefik.http.routers.landing-http.middlewares=traefik-redirect-to-https"
+      - "traefik.http.routers.landing.rule=Host(`${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}`)"
+      - "traefik.http.routers.landing.entrypoints=websecure"
+      - "traefik.http.routers.landing.tls.certresolver=letsencrypt"
+      - "traefik.docker.network=traefik-public"
+    networks:
+      - traefik-public
+
   postgres:
     image: postgres:16
     restart: unless-stopped
@@ -45,7 +63,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-practice_db}
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_BIND_ADDRESS:-0.0.0.0}:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -65,28 +83,19 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "${ADMINER_PORT:-8080}:8080"
+      - "127.0.0.1:${ADMINER_PORT:-8080}:8080"
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.adminer.loadbalancer.server.port=8080"
       - "traefik.http.routers.adminer.service=adminer"
       - "traefik.http.routers.adminer-http.rule=Host(`adminer.${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}`)"
       - "traefik.http.routers.adminer-http.entrypoints=web"
-      - "traefik.http.routers.adminer-http.middlewares=redirect-to-https"
+      - "traefik.http.routers.adminer-http.middlewares=traefik-redirect-to-https"
       - "traefik.http.routers.adminer-http.service=adminer"
       - "traefik.http.routers.adminer.rule=Host(`adminer.${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}`)"
-      - "traefik.http.routers.adminer-base-http.rule=Host(`${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}`)"
-      - "traefik.http.routers.adminer-base-http.entrypoints=web"
-      - "traefik.http.routers.adminer-base-http.middlewares=redirect-to-https"
-      - "traefik.http.routers.adminer-base-http.service=adminer"
-      - "traefik.http.routers.adminer-base.rule=Host(`${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}`)"
       - "traefik.http.routers.adminer.entrypoints=websecure"
       - "traefik.http.routers.adminer.tls.certresolver=letsencrypt"
       - "traefik.http.routers.adminer.middlewares=adminer-auth"
-      - "traefik.http.routers.adminer-base.entrypoints=websecure"
-      - "traefik.http.routers.adminer-base.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.adminer-base.middlewares=adminer-auth"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "traefik.http.middlewares.adminer-auth.basicauth.users=${TRAEFIK_BASIC_AUTH_USERS:-admin:$$apr1$$x2k87nhN$$MIU0oc3VeZfdT/oFbgsno1}"
       - "traefik.docker.network=traefik-public"
     networks:
