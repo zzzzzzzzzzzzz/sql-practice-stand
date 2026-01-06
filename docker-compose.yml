@@ -47,6 +47,7 @@ services:
       - "traefik.http.routers.landing-http.rule=Host(`${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}`)"
       - "traefik.http.routers.landing-http.entrypoints=web"
       - "traefik.http.routers.landing-http.middlewares=traefik-redirect-to-https"
+      - "traefik.http.routers.landing-http.service=landing"
       - "traefik.http.routers.landing.rule=Host(`${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}`)"
       - "traefik.http.routers.landing.entrypoints=websecure"
       - "traefik.http.routers.landing.tls.certresolver=letsencrypt"
