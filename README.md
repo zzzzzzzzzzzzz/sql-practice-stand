@@ -94,6 +94,17 @@ Optional secrets (these have defaults in the workflow if omitted):
 | `POSTGRES_PORT` | `5432` | Host port for PostgreSQL |
 | `ADMINER_PORT` | `8080` | Host port for Adminer |
 
+### One-time database initialization
+
+Run the **Initialize database** workflow (`.github/workflows/init-db.yml`) to seed PostgreSQL from `sql/postgres_schema.sql` without disrupting existing data. The job:
+
+- syncs the repository and writes the `.env` file from the same secrets as the deploy workflow;
+- starts only the `postgres` service with `docker compose up -d postgres`;
+- checks for the `public.employee` table; if it already exists, the seed is skipped to preserve progress;
+- if the table is missing, the schema and seed data are loaded once.
+
+Trigger the workflow manually from **Actions → Initialize database → Run workflow** after your first deploy (or whenever you need to reseed an empty database) to keep database initialization separate from ongoing updates.
+
 ### Acquiring `DEPLOY_SSH_KEY`
 
 Use a dedicated SSH key for GitHub Actions deployments (avoid reusing a personal key):
