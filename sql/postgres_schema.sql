@@ -117,7 +117,7 @@ INSERT INTO customer VALUES (224, 'joe''s bike shop', '4500 fox court', 'grand p
 INSERT INTO customer VALUES (225, 'bob''s swim, cycle, and run', '300 horsecreek circle', 'irving', 'tx', '75039', 214, 5558388, 7789, 7000, 'store catering to triathletes.');
 INSERT INTO customer VALUES (226, 'century shop', '8 dagmar dr.', 'huntington', 'ny', '11743', 516, 5553006, 7555, 4000, 'customer in the midst of a cost-cutting program.');
 INSERT INTO customer VALUES (227, 'the tour', '2500 gardner rd.', 'somerville', 'ma', '02144', 617, 5556673, 7820, 5000, 'customer referred to us by the all american.');
-INSERT INTO customer VALUES (228, 'fitness first', '5000 85th st.', 'jackson heights', 'ny', '11372', 718, 5558710, 7555, 4000, 'recently acquired another sporting goods store.  expect higher volume in the fut');
+INSERT INTO customer VALUES (228, 'fitness first', '5000 85th st.', 'jackson heights', 'ny', '11372', 718, 5558710, 7555, 4000, 'recently acquired another sporting goods store.  expect higher volume in the future.');
 
 INSERT INTO department VALUES (10, 'accounting', 122);
 INSERT INTO department VALUES (20, 'research', 124);
