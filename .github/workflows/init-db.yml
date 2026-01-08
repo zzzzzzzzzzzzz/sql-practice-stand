@@ -1,0 +1,124 @@
+name: Initialize database
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: init-db-main
+  cancel-in-progress: false
+
+jobs:
+  init-db:
+    name: Seed PostgreSQL
+    environment: personal
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+      DEPLOY_SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+      BASE_DOMAIN: ${{ secrets.BASE_DOMAIN }}
+      TRAEFIK_ACME_EMAIL: ${{ secrets.TRAEFIK_ACME_EMAIL }}
+      TRAEFIK_BASIC_AUTH_USERS: ${{ secrets.TRAEFIK_BASIC_AUTH_USERS }}
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+      ADMINER_PORT: ${{ secrets.ADMINER_PORT }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Normalize defaults
+        run: |
+          echo "DEPLOY_SSH_PORT=${DEPLOY_SSH_PORT:-22}" >> "$GITHUB_ENV"
+          echo "POSTGRES_DB=${POSTGRES_DB:-practice_db}" >> "$GITHUB_ENV"
+          echo "POSTGRES_PORT=${POSTGRES_PORT:-5432}" >> "$GITHUB_ENV"
+          echo "ADMINER_PORT=${ADMINER_PORT:-8080}" >> "$GITHUB_ENV"
+          echo "BASE_DOMAIN=${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}" >> "$GITHUB_ENV"
+
+      - name: Validate inputs
+        run: |
+          set -euo pipefail
+          for var in DEPLOY_HOST DEPLOY_USER DEPLOY_PATH POSTGRES_USER POSTGRES_PASSWORD BASE_DOMAIN TRAEFIK_ACME_EMAIL TRAEFIK_BASIC_AUTH_USERS; do
+            if [ -z "${!var:-}" ]; then
+              echo "Missing required variable: $var" >&2
+              exit 1
+            fi
+          done
+
+      - name: Load SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Trust deploy host
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "$DEPLOY_SSH_PORT" "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Create target directory
+        run: |
+          set -euo pipefail
+          ssh -p "$DEPLOY_SSH_PORT" "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p '$DEPLOY_PATH'"
+
+      - name: Sync files to server
+        run: |
+          set -euo pipefail
+          rsync -az --delete --exclude '.git/' --exclude '.github/workflows/*.yml~' -e "ssh -p $DEPLOY_SSH_PORT" ./ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
+
+      - name: Seed database if empty
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+          ADMINER_PORT: ${{ secrets.ADMINER_PORT }}
+          BASE_DOMAIN: ${{ secrets.BASE_DOMAIN }}
+          TRAEFIK_ACME_EMAIL: ${{ secrets.TRAEFIK_ACME_EMAIL }}
+          TRAEFIK_BASIC_AUTH_USERS: ${{ secrets.TRAEFIK_BASIC_AUTH_USERS }}
+        run: |
+          set -euo pipefail
+          ssh -p "$DEPLOY_SSH_PORT" "$DEPLOY_USER@$DEPLOY_HOST" <<EOF
+          set -euo pipefail
+          cd "$DEPLOY_PATH"
+
+          cat > .env <<'ENV'
+          POSTGRES_USER=${POSTGRES_USER:-practice_user}
+          POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-practice_password}
+          POSTGRES_DB=${POSTGRES_DB:-practice_db}
+          POSTGRES_PORT=${POSTGRES_PORT:-5432}
+          ADMINER_PORT=${ADMINER_PORT:-8080}
+          BASE_DOMAIN=${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}
+          TRAEFIK_ACME_EMAIL=${TRAEFIK_ACME_EMAIL}
+          TRAEFIK_BASIC_AUTH_USERS=${TRAEFIK_BASIC_AUTH_USERS}
+          ENV
+
+          docker compose up -d postgres
+          for i in {1..30}; do
+            if docker compose exec -T postgres pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+
+          if ! docker compose exec -T postgres pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; then
+            echo "Postgres container is not ready; aborting initialization." >&2
+            exit 1
+          fi
+
+          if SCHEMA_MARKER=$(docker compose exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "SELECT to_regclass('public.employee')"); then
+            # If the employee table exists, assume the schema is already seeded and exit without touching data.
+            if [ -n "$SCHEMA_MARKER" ]; then
+              echo "Existing schema detected ($SCHEMA_MARKER present); skipping initialization."
+              exit 0
+            fi
+          else
+            echo "Unable to check schema marker; aborting initialization." >&2
+            exit 1
+          fi
+
+          docker compose exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" < sql/postgres_schema.sql
+          echo "Database initialized from sql/postgres_schema.sql."
+          EOF
