@@ -80,17 +80,28 @@ jobs:
           TRAEFIK_BASIC_AUTH_USERS: ${{ secrets.TRAEFIK_BASIC_AUTH_USERS }}
         run: |
           set -euo pipefail
-          ssh -p "$DEPLOY_SSH_PORT" "$DEPLOY_USER@$DEPLOY_HOST" <<EOF
+          ssh -p "$DEPLOY_SSH_PORT" \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            DEPLOY_PATH="${DEPLOY_PATH}" \
+            POSTGRES_USER="${POSTGRES_USER:-practice_user}" \
+            POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-practice_password}" \
+            POSTGRES_DB="${POSTGRES_DB:-practice_db}" \
+            POSTGRES_PORT="${POSTGRES_PORT:-5432}" \
+            ADMINER_PORT="${ADMINER_PORT:-8080}" \
+            BASE_DOMAIN="${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}" \
+            TRAEFIK_ACME_EMAIL="${TRAEFIK_ACME_EMAIL}" \
+            TRAEFIK_BASIC_AUTH_USERS="${TRAEFIK_BASIC_AUTH_USERS}" \
+            'bash -se' <<'EOF'
           set -euo pipefail
           cd "$DEPLOY_PATH"
 
-          cat > .env <<'ENV'
-          POSTGRES_USER=${POSTGRES_USER:-practice_user}
-          POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-practice_password}
-          POSTGRES_DB=${POSTGRES_DB:-practice_db}
-          POSTGRES_PORT=${POSTGRES_PORT:-5432}
-          ADMINER_PORT=${ADMINER_PORT:-8080}
-          BASE_DOMAIN=${BASE_DOMAIN:-sql.practice.zzzzzzzzzzzzz.cc}
+          cat > .env <<ENV
+          POSTGRES_USER=${POSTGRES_USER}
+          POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+          POSTGRES_DB=${POSTGRES_DB}
+          POSTGRES_PORT=${POSTGRES_PORT}
+          ADMINER_PORT=${ADMINER_PORT}
+          BASE_DOMAIN=${BASE_DOMAIN}
           TRAEFIK_ACME_EMAIL=${TRAEFIK_ACME_EMAIL}
           TRAEFIK_BASIC_AUTH_USERS=${TRAEFIK_BASIC_AUTH_USERS}
           ENV
