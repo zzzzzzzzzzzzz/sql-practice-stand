@@ -96,14 +96,7 @@ Optional secrets (these have defaults in the workflow if omitted):
 
 ### One-time database initialization
 
-Run the **Initialize database** workflow (`.github/workflows/init-db.yml`) to seed PostgreSQL from `sql/postgres_schema.sql` without disrupting existing data. The job:
-
-- syncs the repository and writes the `.env` file from the same secrets as the deploy workflow;
-- starts only the `postgres` service with `docker compose up -d postgres`;
-- checks for the `public.employee` table; if it already exists, the seed is skipped to preserve progress;
-- if the table is missing, the schema and seed data are loaded once.
-
-Trigger the workflow manually from **Actions → Initialize database → Run workflow** after your first deploy (or whenever you need to reseed an empty database) to keep database initialization separate from ongoing updates.
+To initialize the database, open Adminer and run the SQL script in `sql/postgres_schema.sql`. This seeds the schema and data for the practice environment; you can re-run it any time you want to reset the dataset.
 
 ### Acquiring `DEPLOY_SSH_KEY`
 
