@@ -98,6 +98,14 @@ Optional secrets (these have defaults in the workflow if omitted):
 
 To initialize the database, open Adminer and run the SQL script in `sql/postgres_schema.sql`. This seeds the schema and data for the practice environment; you can re-run it any time you want to reset the dataset.
 
+### Read-only student user (PostgreSQL)
+
+Use `sql/postgres_student_readonly.sql` as a starting point for creating a student login with read-only access to a `company` database. Update the placeholders in the script (database name, role name, password), then run it via Adminer or `psql`. For SQLAlchemy, the resulting connection string looks like:
+
+```
+postgresql+psycopg://student_user:student_password@localhost:5432/company
+```
+
 ### Acquiring `DEPLOY_SSH_KEY`
 
 Use a dedicated SSH key for GitHub Actions deployments (avoid reusing a personal key):
